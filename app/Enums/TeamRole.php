@@ -6,6 +6,8 @@ enum TeamRole: string
 {
     case Owner = 'owner';
     case Admin = 'admin';
+    case Editor = 'editor';
+    case Author = 'author';
     case Member = 'member';
 
     /**
@@ -29,6 +31,25 @@ enum TeamRole: string
                 TeamPermission::UpdateTeam,
                 TeamPermission::CreateInvitation,
                 TeamPermission::CancelInvitation,
+                TeamPermission::CreateArticle,
+                TeamPermission::UpdateOwnArticle,
+                TeamPermission::UpdateAnyArticle,
+                TeamPermission::PublishArticle,
+                TeamPermission::DeleteOwnArticle,
+                TeamPermission::DeleteAnyArticle,
+                TeamPermission::ManageTopics,
+            ],
+            self::Editor => [
+                TeamPermission::CreateArticle,
+                TeamPermission::UpdateOwnArticle,
+                TeamPermission::UpdateAnyArticle,
+                TeamPermission::PublishArticle,
+                TeamPermission::DeleteOwnArticle,
+            ],
+            self::Author => [
+                TeamPermission::CreateArticle,
+                TeamPermission::UpdateOwnArticle,
+                TeamPermission::DeleteOwnArticle,
             ],
             self::Member => [],
         };
@@ -39,7 +60,7 @@ enum TeamRole: string
      */
     public function hasPermission(TeamPermission $permission): bool
     {
-        return in_array($permission, $this->permissions());
+        return in_array($permission, $this->permissions(), true);
     }
 
     /**
@@ -49,8 +70,10 @@ enum TeamRole: string
     public function level(): int
     {
         return match ($this) {
-            self::Owner => 3,
-            self::Admin => 2,
+            self::Owner => 5,
+            self::Admin => 4,
+            self::Editor => 3,
+            self::Author => 2,
             self::Member => 1,
         };
     }

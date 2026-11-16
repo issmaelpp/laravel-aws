@@ -2,9 +2,15 @@
 
 namespace App\Providers;
 
+use App\Models\Team;
+use Aws\DynamoDb\DynamoDbClient;
+use Aws\S3\S3Client;
+use Aws\Sns\SnsClient;
+use Aws\Sqs\SqsClient;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -17,31 +23,31 @@ class AppServiceProvider extends ServiceProvider
     {
         $sharedConfig = [
             'version' => 'latest',
-            'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
-            'endpoint' => env('AWS_ENDPOINT', 'https://127.0.0.1:9297'),
+            'region' => config('services.aws.region', 'us-east-1'),
+            'endpoint' => config('services.aws.endpoint', 'https://127.0.0.1:9297'),
             'credentials' => [
-                'key' => env('AWS_ACCESS_KEY_ID'),
-                'secret' => env('AWS_SECRET_ACCESS_KEY'),
+                'key' => config('services.aws.key'),
+                'secret' => config('services.aws.secret'),
             ],
             'http' => [
-                'verify' => env('AWS_CA_BUNDLE', true),
+                'verify' => config('services.aws.ca_bundle', true),
             ],
         ];
 
-        $this->app->singleton(\Aws\S3\S3Client::class, function ($app) use ($sharedConfig) {
-            return new \Aws\S3\S3Client(array_merge($sharedConfig, ['use_path_style_endpoint' => true]));
+        $this->app->singleton(S3Client::class, function ($app) use ($sharedConfig) {
+            return new S3Client(array_merge($sharedConfig, ['use_path_style_endpoint' => true]));
         });
 
-        $this->app->singleton(\Aws\Sqs\SqsClient::class, function ($app) use ($sharedConfig) {
-            return new \Aws\Sqs\SqsClient($sharedConfig);
+        $this->app->singleton(SqsClient::class, function ($app) use ($sharedConfig) {
+            return new SqsClient($sharedConfig);
         });
 
-        $this->app->singleton(\Aws\Sns\SnsClient::class, function ($app) use ($sharedConfig) {
-            return new \Aws\Sns\SnsClient($sharedConfig);
+        $this->app->singleton(SnsClient::class, function ($app) use ($sharedConfig) {
+            return new SnsClient($sharedConfig);
         });
 
-        $this->app->singleton(\Aws\DynamoDb\DynamoDbClient::class, function ($app) use ($sharedConfig) {
-            return new \Aws\DynamoDb\DynamoDbClient($sharedConfig);
+        $this->app->singleton(DynamoDbClient::class, function ($app) use ($sharedConfig) {
+            return new DynamoDbClient($sharedConfig);
         });
     }
 
@@ -51,6 +57,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        Route::bind('current_team', fn (string $slug): Team => Team::where('slug', $slug)->firstOrFail());
     }
 
     /**

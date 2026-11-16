@@ -23,6 +23,6 @@ class ProcessCommunityNotification implements ShouldQueue
      */
     public function handle(): void
     {
-        Log::info("Procesando notificación de comunidad para: " . ($this->data['title'] ?? 'Sin título'));
+        Log::info('Procesando notificación de comunidad para: '.($this->data['title'] ?? 'Sin título'));
     }
 }
