@@ -45,3 +45,6 @@ yarn-error.log
 /opencode.jsonc
 
 /docs
+.env.profile-local
+.env.profile-aws
+.env.backup-*
